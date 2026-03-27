@@ -1,37 +1,52 @@
-const CACHE_NAME = 'todo-cache-v3';
-const ASSETS = [
+const CACHE_NAME = 'todo-cache-v2';  // Обновляем версию кэша
+
+// Добавляем манифест и все иконки в список ресурсов
+const ASSETS_TO_CACHE = [
     '/',
     '/index.html',
     '/app.js',
-    '/manifest.json'
+    '/manifest.json',
+    '/icons/favicon.ico',
+    '/icons/icon-16x16.png',
+    '/icons/icon-32x32.png',
+    '/icons/icon-48x48.png',
+    '/icons/icon-64x64.png',
+    '/icons/icon-128x128.png',
+    '/icons/icon-256x256.png',
+    '/icons/icon-512x512.png',
+    '/icons/icon-152x152.png'
 ];
 
-self.addEventListener('install', event => {
+// Событие INSTALL
+self.addEventListener('install', (event) => {
     console.log('[SW] Установка');
     event.waitUntil(
         caches.open(CACHE_NAME)
-            .then(cache => {
-                console.log('[SW] Кэшируем файлы');
-                return cache.addAll(ASSETS);
+            .then((cache) => {
+                console.log('[SW] Кэширование ресурсов');
+                return cache.addAll(ASSETS_TO_CACHE);
             })
             .then(() => {
-                console.log('[SW] Установка завершена');
+                console.log('[SW] Установка завершена, активация');
                 return self.skipWaiting();
             })
-            .catch(error => {
+            .catch((error) => {
                 console.error('[SW] Ошибка кэширования:', error);
             })
     );
 });
 
-self.addEventListener('activate', event => {
+// Событие ACTIVATE
+self.addEventListener('activate', (event) => {
     console.log('[SW] Активация');
     event.waitUntil(
-        caches.keys().then(keys => {
+        caches.keys().then((cacheNames) => {
             return Promise.all(
-                keys.filter(key => key !== CACHE_NAME).map(key => {
-                    console.log('[SW] Удаляем старый кэш:', key);
-                    return caches.delete(key);
+                cacheNames.map((cacheName) => {
+                    if (cacheName !== CACHE_NAME) {
+                        console.log('[SW] Удаление старого кэша:', cacheName);
+                        return caches.delete(cacheName);
+                    }
                 })
             );
         }).then(() => {
@@ -41,19 +56,24 @@ self.addEventListener('activate', event => {
     );
 });
 
-self.addEventListener('fetch', event => {
+// Событие FETCH
+self.addEventListener('fetch', (event) => {
     event.respondWith(
         caches.match(event.request)
-            .then(response => {
+            .then((response) => {
                 if (response) {
-                    console.log('[SW] Из кэша:', event.request.url);
+                    console.log('[SW] Ответ из кэша для:', event.request.url);
                     return response;
                 }
-                console.log('[SW] Из сети:', event.request.url);
-                return fetch(event.request);
-            })
-            .catch(() => {
-                return new Response('Нет соединения', { status: 404 });
+                console.log('[SW] Запрос в сеть для:', event.request.url);
+                return fetch(event.request).catch((error) => {
+                    console.error('[SW] Ошибка сети:', error);
+                    // Возвращаем fallback-ответ при отсутствии сети
+                    return new Response('Нет соединения с интернетом и ресурс не найден в кэше.', {
+                        status: 404,
+                        statusText: 'Not Found',
+                    });
+                });
             })
     );
 });
