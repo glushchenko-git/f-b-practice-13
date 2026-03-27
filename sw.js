@@ -6,15 +6,7 @@ const ASSETS_TO_CACHE = [
     '/index.html',
     '/app.js',
     '/manifest.json',
-    '/icons/favicon.ico',
-    '/icons/icon-16x16.png',
-    '/icons/icon-32x32.png',
-    '/icons/icon-48x48.png',
-    '/icons/icon-64x64.png',
-    '/icons/icon-128x128.png',
-    '/icons/icon-256x256.png',
-    '/icons/icon-512x512.png',
-    '/icons/icon-152x152.png'
+    '/icons/icns.png',
 ];
 
 // Событие INSTALL
